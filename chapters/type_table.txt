@@ -28,8 +28,8 @@
 |void pointer
 
 |`BOOL`
-|`int32_t`
-|boolean represented as int32_t
+|`uint8_t`
+|boolean represented as uint8_t
 
 |`FUNCTION_POINTER`
 |`void(*)(void)`
