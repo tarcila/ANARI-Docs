@@ -1,5 +1,5 @@
 // Copyright 2023 The Khronos Group Inc.
-// SPDX-License-Identifier: CC-BY-4.0  
+// SPDX-License-Identifier: CC-BY-4.0
 
 [[object_types]]
 == Object Types and Subtypes
@@ -126,9 +126,9 @@ include::object_types/instances.txt[]
 === Group
 
 [[anariNewGroup]]
-Groups in ANARI represent collections of <<surface>>, <<volume>>, and <<light>>
-which share a common local-space coordinate system. Groups are created
-with
+Groups in ANARI represent collections of <<Surface, surfaces>>, <<Volume,
+volumes>>, and <<Light, lights>> which share a common local-space coordinate
+system. Groups are created with
 
 [source,cpp]
 ....

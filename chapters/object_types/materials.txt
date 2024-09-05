@@ -1,5 +1,5 @@
 // Copyright 2023 The Khronos Group Inc.
-// SPDX-License-Identifier: CC-BY-4.0  
+// SPDX-License-Identifier: CC-BY-4.0
 
 [[object_types_material]]
 === Material
@@ -74,7 +74,7 @@ https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materi
 | baseColor           |`FLOAT32_VEC3` / `SAMPLER` / `STRING`|(1.0, 1.0, 1.0)| base color
 | opacity             |`FLOAT32` / `SAMPLER` / `STRING`     |           1.0 | opacity
 | metallic            |`FLOAT32` / `SAMPLER` / `STRING`     |           1.0 | metalness
-| roughness           |`FLOAT32` / `SAMPLER` / `STRING`     |           1.0 | roughness 
+| roughness           |`FLOAT32` / `SAMPLER` / `STRING`     |           1.0 | roughness
 | normal              |`SAMPLER`                            |               | normal map for the base layer
 | emissive            |`FLOAT32_VEC3` / `SAMPLER` / `STRING`|(0.0, 0.0, 0.0)| emissive
 | occlusion           |`SAMPLER`                            |               | occlusion map

@@ -1,5 +1,5 @@
 // Copyright 2023 The Khronos Group Inc.
-// SPDX-License-Identifier: CC-BY-4.0  
+// SPDX-License-Identifier: CC-BY-4.0
 
 [[object_types_instance]]
 === Instance
@@ -13,16 +13,16 @@ Instances are created with
 ANARIInstance anariNewInstance(ANARIDevice, const char *subtype);
 ....
 
-All instances take an array of <<group>> representing all the objects which
-share the instances world-space transform. They also always take a generic
-`FLOAT32_MAT4` transform which serves as a fall back but may be overridden by
-subtype specific transform definitions.
+All instances take a <<Group>> representing all the objects which share the
+instances world-space transform. They also always take a generic `FLOAT32_MAT4`
+transform which serves as a fall back but may be overridden by subtype specific
+transform definitions.
 
 .<<api_concepts_parameters, Parameters>> understood by instances.
 [cols="<3,<4,>3,<14",options="header,unbreakable"]
 |===================================================================================================
 | Name      | Type         |                                       Default | Description
-| group     |`GROUP`       |                                               | Group to be instanced, required
+| group     |`GROUP`       |                                               | <<Group>> to be instanced, required
 | transform |`FLOAT32_MAT4`| \((1, 0, 0, 0), (0, 1, 0, 0), (0, 0, 1, 0), (0, 0, 0, 1)) | world-space transformation matrix for all attached objects
 | id        |`UINT32`      |         -1u | <<frame_channels, extension `KHR_FRAME_CHANNEL_INSTANCE_ID`>>, optional user Id, for frame <<frame_channels, channel `instanceId`>>
 |===================================================================================================

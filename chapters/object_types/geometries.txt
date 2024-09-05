@@ -1,5 +1,5 @@
 // Copyright 2023 The Khronos Group Inc.
-// SPDX-License-Identifier: CC-BY-4.0  
+// SPDX-License-Identifier: CC-BY-4.0
 
 [[object_types_geometry]]
 === Geometry
@@ -195,7 +195,7 @@ parameters:
 [cols="<3,<5,<4",options="header,unbreakable"]
 |===================================================================================================
 | Name     | Type                               | Description
-| isovalue | `FLOAT32` / `ARRAY1D` of `FLOAT32` | isovalue(s) defining the isosurface(s) 
+| isovalue | `FLOAT32` / `ARRAY1D` of `FLOAT32` | isovalue(s) defining the isosurface(s)
 | field    | `SPATIAL_FIELD`                    | <<object_types_spatial_field, Spatial Field>> to be isosurfaced
 |===================================================================================================
 
