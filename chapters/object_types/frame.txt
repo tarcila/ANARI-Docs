@@ -97,11 +97,9 @@ this will incur a deadlock.
                                                                         possible values: `UINT32`
 | channel.objectId    |`DATA_TYPE` | extension `KHR_FRAME_CHANNEL_OBJECT_ID`, enable mapping the `objectId` channel and specify its
                                                                         observable type; user defined <<Surface>> /
-                                                                        <<Volume>> `id`, if specified, or index in
-                                                                        <<Group>> of first hit; possible values: `UINT32`
+                                                                        <<Volume>> `id`, possible values: `UINT32`
 | channel.instanceId  |`DATA_TYPE` | extension `KHR_FRAME_CHANNEL_INSTANCE_ID`, enable mapping the `instanceId` channel and specify its
                                                                         observable type; user defined <<Instance>> `id`,
-                                                                        if specified, or instance index of first hit;
                                                                         possible values: `UINT32`
 |===================================================================================================
 
