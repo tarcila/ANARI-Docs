@@ -119,20 +119,23 @@ range `[0, 1]`).
 To use the glTF `metallicRoughnessTexture` create two samplers with the
 same `image` array and a "swizzle" `outTransform` for `roughness`.
 
-The normal maps `normal` and `clearcoatNormal` typically use an <<Image2D>>
-sampler with `image` array element type `UFIXED8_VEC3` with a transformation
-from range `[0, 1]` to range `[-1, 1]` via `outTransform`, computing `2.0 *
-texel - 1.0` per channel. The glTF `scale` parameter of normal maps should be
-factored into the `outTransform` of the corresponding <<Sampler, sampler>>.
+The normal maps `normal` and `clearcoatNormal` typically use an
+<<Image2D>> sampler with `image` array element type `UFIXED8_VEC3` with
+a transformation from range `[0, 1]` to range `[-1, 1]` via
+`outTransform` and `outOffset`, computing `2 * texel - 1` per channel.
+The glTF `scale` parameter of normal maps should be factored into the
+`outTransform` and `outOffset` of the corresponding <<Sampler,
+sampler>>. Putting it all together, set `outTransform` to \((2 * scale,
+0, 0, 0), (0, 2 * scale, 0, 0), (0, 0, 2, 0), (0, 0, 0, 1)) and
+`outOffset` to (-scale, -scale, -1, 0).
 
 Similarly, glTF parameters `emissiveStrength` and `emissiveFactor`
 should be factored into `emissive` (or `outTransform` if `emissive` is
 an `ANARI_SAMPLER`).
 
 Also, the glTF parameters `iridescenceThicknessMinimum` and
-`iridescenceThicknessMaximum` should be mapped to `outTransforms` of the
-`iridescenceThickness` sampler (assuming the 4th channel is not present
-or 1).
+`iridescenceThicknessMaximum` should be mapped to `outTransform` and
+`outOffset` of the `iridescenceThickness` sampler.
 ====
 
 [NOTE]
@@ -140,5 +143,6 @@ or 1).
 ====
 Implementations should apply the `occlusion` attenuation only for
 otherwise unoccluded ambient lighting. The glTF parameter `strength`
-should be factored into the `outTransforms` of its sampler.
+should be factored into the diagonal of `outTransform` (as scale) and `1 -
+strength` added to `outOffset` of its sampler.
 ====

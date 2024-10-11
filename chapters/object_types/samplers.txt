@@ -53,7 +53,7 @@ being used.
 ====
 Like all `FLOAT32_MAT4` matrices, `inTransform` and `outTransform` are
 in column-major memory layout and are applied to column vectors
-(multiplied from the left `transform*x + offset`).
+(multiplied from the left `transform * x + offset`).
 ====
 
 [[object_types_sampler_image2D]]
@@ -96,7 +96,7 @@ being used.
 ====
 Like all `FLOAT32_MAT4` matrices, `inTransform` and `outTransform` are
 in column-major memory layout and are applied to column vectors
-(multiplied from the left `transform*x + offset`).
+(multiplied from the left `transform * x + offset`).
 ====
 
 [[object_types_sampler_image3D]]
@@ -140,7 +140,7 @@ being used.
 ====
 Like all `FLOAT32_MAT4` matrices, `inTransform` and `outTransform` are
 in column-major memory layout and are applied to column vectors
-(multiplied from the left `transform*x + offset`).
+(multiplied from the left `transform * x + offset`).
 ====
 
 [[object_types_sampler_primitive]]
@@ -195,5 +195,5 @@ The transform sampler does not actually sample any array or image but merely app
 transformation to an attribute for purposes such as swizzling or scaling the components.
 
 Like all `FLOAT32_MAT4` matrices, `outTransform` is in column-major memory
-layout and is applied to column vectors (multiplied from the left `transform*x + offset`).
+layout and is applied to column vectors (multiplied from the left `transform * x + offset`).
 ====
