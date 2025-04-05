@@ -11,10 +11,13 @@ jobs:
   remove-pr-preview-branch:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # - uses: actions/checkout@v4
       - run: |
+          echo "${{ github.repository }}"
+          echo "${{ github.repositoryUrl }}"
           gh pr -R ${{ github.repository }} comment --edit-last ${{ github.event.pull_request.number }} -b "~~Generated documentation~~"
-          git push origin :pr-preview/${{ github.event.pull_request.number }} || :
+          git init
+          git push https://${{ github.actor }}:${GH_TOKEN}@github.com/${{ github.repository }}.git :pr-preview/${{ github.event.pull_request.number }} || :
         if: "${{ github.event_name == 'pull_request' && github.event.action != 'opened' && github.event.action != 'reopened' }}"
         env:
           GH_TOKEN: ${{ github.token }}
