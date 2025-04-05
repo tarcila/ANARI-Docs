@@ -13,8 +13,6 @@ jobs:
     steps:
       # - uses: actions/checkout@v4
       - run: |
-          echo "${{ github.repository }}"
-          echo "${{ github.repositoryUrl }}"
           gh pr -R ${{ github.repository }} comment --edit-last ${{ github.event.pull_request.number }} -b "~~Generated documentation~~"
           git init
           git push https://${{ github.actor }}:${GH_TOKEN}@github.com/${{ github.repository }}.git :pr-preview/${{ github.event.pull_request.number }} || :
@@ -43,10 +41,8 @@ jobs:
     needs: build-docs
     if: "${{ github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.action == 'reopened')}}"
     steps:
-      - uses: actions/checkout@v4
       - run: |
-          git checkout --orphan pr-preview/${{ github.event.pull_request.number }}
-          git rm -fr .
+          git init -b pr-preview/${{ github.event.pull_request.number }}
       - uses: actions/download-artifact@v4
         id: artifacts
         with:
@@ -56,10 +52,10 @@ jobs:
           mv ${{ steps.artifacts.outputs.download-path }}/html/anspec.html .
           rm -fr ${{ steps.artifacts.outputs.download-path }}
           git stage -f anspec.html
-          git config --global user.name "ANARI-Docs"
+          git config --global user.name "${{ github.actor }}"
           git config --global user.email "noreply@noreply"
           git commit -a -m "Update doc preview for PR ${{ github.event.pull_request.number }}"
-          git push origin -f HEAD || :  # ignore push errors, in case there is no change
+          git push -f  https://${{ github.actor }}:${GH_TOKEN}@github.com/${{ github.repository }}.git HEAD || :  # ignore push errors, in case there is no change
           HEAD="$(git rev-parse HEAD)"
           RAW_URL="https://raw.githubusercontent.com/${{ github.repository }}/${HEAD}/anspec.html"
           MESSAGE="[Generated documentation](https://html-preview.github.io/?url=${RAW_URL})"
