@@ -61,6 +61,7 @@
 * <<extension_spatial_field_data_centering, `KHR_SPATIAL_FIELD_DATA_CENTERING`>>: explicit node- or cell-centered sample association is supported on applicable field subtypes
 * <<object_types_spatial_field_nanovdb, `KHR_SPATIAL_FIELD_NANOVDB`>>: `nanovdb` spatial field subtype is supported
 * <<object_types_spatial_field_nanovdb_rectilinear, `KHR_SPATIAL_FIELD_NANOVDB_RECTILINEAR`>>: `nanovdbRectilinear` spatial field subtype is supported
+* <<extension_spatial_field_region_of_interest, `KHR_SPATIAL_FIELD_REGION_OF_INTEREST`>>: object-space field-domain clipping is supported
 * <<object_types_spatial_field_structured_rectilinear, `KHR_SPATIAL_FIELD_STRUCTURED_RECTILINEAR`>>: `structuredRectilinear` spatial field subtype is supported
 * <<object_types_spatial_field_structured_regular, `KHR_SPATIAL_FIELD_STRUCTURED_REGULAR`>>: `structuredRegular` spatial field subtype is supported
 * <<object_types_spatial_field_structured_regular, `KHR_SPATIAL_FIELD_STRUCTURED_REGULAR_FILTER_CUBIC`>>: `structuredRegular` spatial field supports `cubic` filtering for parameter `filter`

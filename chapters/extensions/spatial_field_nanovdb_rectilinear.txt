@@ -23,6 +23,9 @@ coordinates along three Cartesian axes.
 | dataCentering |`STRING` | `cell` | extension
     <<extension_spatial_field_data_centering, `KHR_SPATIAL_FIELD_DATA_CENTERING`>>;
     sample location: cell centers (`cell`) or grid vertices (`node`)
+| roi |`FLOAT32_BOX3` | unset | extension
+    <<extension_spatial_field_region_of_interest, `KHR_SPATIAL_FIELD_REGION_OF_INTEREST`>>;
+    object-space box restricting the field domain
 |===================================================================================================
 
 The serialized-grid requirements are the same as for
@@ -60,6 +63,11 @@ An absent, unknown, or unset `dataCentering` selects `cell` for this subtype.
 For nonempty grids, coordinates must: be finite and strictly increasing.
 The field domain is the box between the first and last coordinates on each
 axis, independently of the embedded world-space bounding box.
+When `KHR_SPATIAL_FIELD_REGION_OF_INTEREST` is supported, `roi` clips this
+axis-defined domain using the
+<<extension_spatial_field_region_of_interest, common ROI rules>>.
+It does not change the index bounding box, axis coordinates, or tree lookup
+values, and the embedded world-space bounding box is not a clipping bound.
 A well-formed grid with an empty `indexBBox` ([eq]#e < b# on at least one
 axis) has an empty field domain and contributes nothing; this case is valid
 and needs no diagnostic.

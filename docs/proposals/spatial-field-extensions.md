@@ -49,7 +49,7 @@ The parameter names remain `coordsX`, `coordsY`, and `coordsZ`. Defaults differ 
 
 The extension defines the mapping as follows:
 
-- Explicit coordinates are the sole object-space placement/domain authority. They replace, rather than compose with, the embedded index-to-world map and `worldBBox` for this subtype.
+- Explicit coordinates are the sole object-space placement/domain authority. They replace, rather than compose with, the embedded index-to-world map and `worldBBox` for this subtype. Placement such as rotation belongs in ANARI instance transforms, not an implicit application of the embedded map.
 - The inclusive active index bbox `[b,e]` defines sample counts `n=e-b+1` and index origins. Nonempty cell-centered axes require `n+1` boundaries; node-centered axes require `n` sample coordinates.
 - Reuse the dense rectilinear logical mapping, clamp the local sample coordinate to `[0,n-1]`, then add `b` for tree lookup. A nonzero or negative index origin is not discarded.
 - Logical lookups retain inactive stored values, constant tiles, and background values. Inactivity is not a zero/transparent mask inside the domain.
@@ -72,6 +72,22 @@ Numeric and edge-case validation cases for this subtype:
 
 Samples in these examples are constant along the other two axes, with valid coordinate counts there. The extension defines the transform override and empty-grid behavior; these are not inherited implementation guarantees. Numerical tolerances remain an interoperability review topic.
 
+## Region of interest
+
+[Common clipping rules](../../chapters/object_types/spatial_fields.txt#extension_spatial_field_region_of_interest) appear below the regular-field table. Each subtype links to those rules and identifies its domain:
+
+| Subtype | Domain before clipping |
+|---|---|
+| `structuredRegular` | Extent derived from origin, spacing, sample counts, and centering. |
+| `structuredRectilinear` | Box between coordinate-array endpoints. |
+| `nanovdb` | Extent supplied by the serialized grid header. |
+| `nanovdbRectilinear` | Box between explicit coordinate-array endpoints, not the embedded world bbox; empty when the index bbox is empty. |
+| `unstructured` | Domain occupied by the cells, not their enclosing box. |
+
+ROI intersects this domain without changing internal reconstruction, centering, or topology. Ghost samples remain available for filtering, all renderer ray classes observe clipping, and no isosurface cap is created. Empty/disjoint/inverted finite boxes contribute nothing; non-finite components make the field invalid. Instances transform the clipped domain, and shared field objects share their ROI. No property is added: containing group/world bounds may remain conservative.
+
+Additional validation cases cover clipping without changing inside values, nonzero-opacity transfer functions at scalar zero, empty/invalid boxes, unsetting/recommitting, isosurfaces at ROI boundaries, all ray classes, and rotated instances. For NanoVDB rectilinear fields, test a nonzero index origin and an embedded world bbox unrelated to the explicit axes: neither ROI clipping nor acceleration bounds may revert to that embedded box or reinterpret the remaining samples.
+
 ## Build and validation
 
 From this workspace:
@@ -85,4 +101,8 @@ Open `out/html/anspec.html`. No `EXTENSIONS` flags are needed. `SPECREMARK` avoi
 
 On this Nix host, the optimizer's `#!/bin/bash` interpreter path does not exist. Render with `make pdf GS_EXISTS= SPECREMARK="spatial-field extension review"`, then run `bash config/optimize-pdf out/pdf/anspec.pdf` to produce `out/pdf/anspec-optimized.pdf`.
 
-Every commit prefix is checked with HTML generation, `make allchecks`, and heading/anchor/parameter-table checks. The complete series also receives a PDF build. These checks validate documents, not device conformance. Independent implementations, numerical tolerances, and application examples remain necessary review topics.
+The ordered extension commits are data centering → structured rectilinear → NanoVDB rectilinear → ROI, following the unchanged research commit. Each prefix builds without references to features introduced later. This is an ordered series, not a promise of arbitrary cherry-pick order. The prior inline series is preserved at `spatial-field-drafts-before-nanovdb`; the earlier layout experiments remain at `spatial-field-drafts-before-inline`.
+
+Every commit prefix passed HTML generation, `make allchecks`, and heading/anchor checks. Final parameter-table checks passed: five actual subtype headings, no non-subtype extension headings, a cell default on NanoVDB rectilinear versus node on the dense types, and ROI on all five scoped subtypes. No new unresolved local links were found. The completed series also passed PDF rendering and explicit Bash optimization. The ordinary NanoVDB section was verified unchanged before the ROI commit, which adds only the clipping capability.
+
+These checks validate documents, not device conformance. Independent implementations, numerical tolerances, and application examples remain necessary review topics.

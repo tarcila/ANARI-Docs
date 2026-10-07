@@ -36,6 +36,9 @@ the table below.
 | dataCentering |`STRING` | `node` | extension
     <<extension_spatial_field_data_centering, `KHR_SPATIAL_FIELD_DATA_CENTERING`>>;
     sample location: grid vertices (`node`) or cell centers (`cell`)
+| roi |`FLOAT32_BOX3` | unset | extension
+    <<extension_spatial_field_region_of_interest, `KHR_SPATIAL_FIELD_REGION_OF_INTEREST`>>;
+    object-space box restricting the field domain
 |===================================================================================================
 
 The spatial field grid can be moved with `origin` and scaled with `spacing`, in
@@ -93,6 +96,54 @@ An axis with one sample uses that value throughout its extent.
 Volume rendering and isosurfaces use this same domain and reconstruction;
 node-centered reconstruction is unchanged.
 
+[[extension_spatial_field_region_of_interest]]
+The extension `KHR_SPATIAL_FIELD_REGION_OF_INTEREST` adds `roi` to
+`structuredRegular`, `structuredRectilinear`, `nanovdb`,
+`nanovdbRectilinear`, and `unstructured`.
+An implementation advertising it must: support the parameter and expose it
+through <<api_concepts_introspection, introspection>> on every one of these
+subtypes that it implements, and must: implement at least one of them.
+Runtime availability is queried through device and renderer extension
+properties.
+Applicability to other subtypes is defined by their extensions, not implied.
+
+`roi` restricts the field domain to its intersection with the specified box,
+expressed in the field's object space; it must: not enlarge that domain.
+For regular fields, the original domain is the grid extent determined by
+`origin`, `spacing`, the sample counts, and the selected centering.
+An unset `roi` leaves this domain unchanged.
+A set box must: have six finite components; its bounds are inclusive.
+If any lower component is greater than or equal to its upper component, or
+the intersection is empty, the field contributes nothing; these cases are
+valid and need not produce a diagnostic.
+A non-finite box makes the field invalid: it must: contribute neither volume
+rendering nor isosurface geometry, and the device must: report an error
+through its status callback, if one is installed.
+
+Outside the clipped domain, volumes contribute no emission, absorption, or
+scattering, and isosurfaces contribute no intersections.
+The restriction applies to every ray class used by the renderer, not only
+camera rays.
+Clipping generates neither a cap nor an isovalue crossing at the boundary.
+Inside the clipped domain, reconstruction and gradients are unchanged:
+filters may: read samples outside the ROI according to the subtype's ordinary
+boundary rules.
+The ROI does not zero those samples, move them, or change the coordinate map.
+This permits ghost samples to support interpolation without rendering their
+region, but does not represent an arbitrary per-cell mask.
+
+An instance transforms the clipped domain with the field; each instance uses
+its own transformed domain, not a world-space axis-aligned approximation.
+Uses of the same field share its ROI; different object-space ROIs require
+distinct field objects, which may: share data arrays.
+Bounds reported for containing groups and worlds may: remain conservative
+and include the unclipped extent; applications must: not infer the effective
+domain from them alone.
+This extension adds no spatial-field bounds property and does not change
+centering.
+Changing or unsetting `roi` follows the ordinary commit rules; unsetting it
+restores the original domain.
+
 Applications which set unknown values for `filter` will result in the default
 being used.
 
@@ -123,10 +174,18 @@ the table below.
 | data    |`ARRAY1D` of `UINT8` |            | NanoVDB grid, as a binary blob
 | filter  |`STRING`             |    `linear`| filter used for reconstructing the field,
                                                possible values: `nearest`, `linear`, `cubic`
+| roi |`FLOAT32_BOX3` | unset | extension
+    <<extension_spatial_field_region_of_interest, `KHR_SPATIAL_FIELD_REGION_OF_INTEREST`>>;
+    object-space box restricting the field domain
 |===================================================================================================
 
 The `data` parameter content is expected to be a single NanoVDB grid, as read from a NanoVDB file or constructed by the NanoVDB API.
 The spatial field extent is implicitly defined in the grid header.
+When `KHR_SPATIAL_FIELD_REGION_OF_INTEREST` is supported, `roi` clips this
+header-defined extent using the
+<<extension_spatial_field_region_of_interest, common ROI rules>>.
+Within the clipped domain, the embedded coordinate transform, grid values,
+and reconstruction are unchanged.
 
 The device must support NanoVDB grids with major version 32.
 
@@ -155,11 +214,19 @@ below.
 | cell.data       |`ARRAY1D` of `UFIXED8` / `FIXED16` / `UFIXED16` / `FLOAT32` / `FLOAT64` | alternative specification of the values (if `vertex.data` is not explicitly set): array of values in cells
 | cell.type       |`ARRAY1D` of `UINT8`                                                    | array of cell types, where 10 encodes tetrahedral, 12 hexahedral, 13 wedge, and 14 pyramidal cells
 | cell.index      |`ARRAY1D` of `UINT32`                                                   | array of indices into the `index` array, specifying the first (index of the) vertex of each cell
+| roi             |`FLOAT32_BOX3`                                                        | extension
+    <<extension_spatial_field_region_of_interest, `KHR_SPATIAL_FIELD_REGION_OF_INTEREST`>>;
+    optional object-space box restricting the field domain, unset by default
 |===================================================================================================
 
 Sampled cell values can be specified either per-vertex (via `vertex.data`) or
 per-cell (via `cell.data`). If both arrays are explicitly set, `vertex.data` takes
 precedence.
+When `KHR_SPATIAL_FIELD_REGION_OF_INTEREST` is supported, `roi` restricts the
+domain occupied by these cells using the
+<<extension_spatial_field_region_of_interest, common ROI rules>>.
+It does not change cell topology, sample association, or the precedence of
+`vertex.data` over `cell.data`.
 
 Each cell is formed by a consecutive group of indices from `index` into the
 vertices, the first index of the group indicated by `cell.index`.

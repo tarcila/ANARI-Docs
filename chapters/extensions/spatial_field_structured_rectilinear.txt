@@ -23,6 +23,9 @@ each axis.
 | dataCentering |`STRING` | `node` | extension
     <<extension_spatial_field_data_centering, `KHR_SPATIAL_FIELD_DATA_CENTERING`>>;
     sample location: grid vertices (`node`) or cell centers (`cell`)
+| roi |`FLOAT32_BOX3` | unset | extension
+    <<extension_spatial_field_region_of_interest, `KHR_SPATIAL_FIELD_REGION_OF_INTEREST`>>;
+    object-space box restricting the field domain
 |===================================================================================================
 
 By default, values are located at grid vertices (node-centered).
@@ -45,6 +48,10 @@ The sample in cell [eq]#i# along an axis lies at the midpoint of coordinates
 Each coordinate array must: contain finite, strictly increasing values.
 The field domain is the box whose lower and upper corners are the first and
 last coordinates along each axis.
+When `KHR_SPATIAL_FIELD_REGION_OF_INTEREST` is supported, `roi` clips this
+coordinate-defined domain using the
+<<extension_spatial_field_region_of_interest, common ROI rules>>; it does not
+change the axis arrays or the reconstruction described below.
 The `origin` and `spacing` parameters of `structuredRegular` do not apply.
 Missing required arrays, unsupported array element types, invalid dimensions,
 or invalid coordinates make the field invalid.
