@@ -1,0 +1,86 @@
+// Copyright 2026 The Khronos Group Inc.
+// SPDX-License-Identifier: CC-BY-4.0
+
+[[object_types_spatial_field_structured_rectilinear]]
+==== Structured Rectilinear
+
+Extension `KHR_SPATIAL_FIELD_STRUCTURED_RECTILINEAR`
+
+Structured rectilinear spatial fields are created by passing the subtype string
+`structuredRectilinear` to <<object_types_spatial_field, `anariNewSpatialField`>>.
+The grid has Cartesian axes with independently specified coordinates along
+each axis.
+
+.Configuration parameters for structured rectilinear spatial fields.
+[cols="<,<2,>,<5",options="header,unbreakable"]
+|===================================================================================================
+| Name    | Type           | Default | Description
+| data    |`ARRAY3D` of `UFIXED8` / `FIXED16` / `UFIXED16` / `FLOAT32` / `FLOAT64` | | required array of scalar values
+| coordsX |`ARRAY1D` of `FLOAT32` | | required grid coordinates along the object-space X axis
+| coordsY |`ARRAY1D` of `FLOAT32` | | required grid coordinates along the object-space Y axis
+| coordsZ |`ARRAY1D` of `FLOAT32` | | required grid coordinates along the object-space Z axis
+| filter  |`STRING` | `linear` | reconstruction filter; possible values: `nearest`, `linear`
+| dataCentering |`STRING` | `node` | extension
+    <<extension_spatial_field_data_centering, `KHR_SPATIAL_FIELD_DATA_CENTERING`>>;
+    sample location: grid vertices (`node`) or cell centers (`cell`)
+|===================================================================================================
+
+By default, values are located at grid vertices (node-centered).
+Each dimension of node-centered `data` must: contain at least two samples, and
+each coordinate array must: have the same length as the corresponding dimension.
+A sample with indices [eq]#(i, j, k)# is located at
+[eq]#(`coordsX`[i], `coordsY`[j], `coordsZ`[k])#.
+
+When `KHR_SPATIAL_FIELD_DATA_CENTERING` is supported, `dataCentering` has the
+<<extension_spatial_field_data_centering, same default and update behavior>>
+as for regular fields.
+Unlike regular fields, cell-centered rectilinear fields specify cell
+boundaries with `coordsX`, `coordsY`, and `coordsZ`, not with `origin` and
+`spacing`.
+Each dimension of cell-centered `data` must: contain at least one sample, and
+each coordinate array must: have one more element than that dimension.
+The sample in cell [eq]#i# along an axis lies at the midpoint of coordinates
+[eq]#c~i~# and [eq]#c~i+1~#.
+
+Each coordinate array must: contain finite, strictly increasing values.
+The field domain is the box whose lower and upper corners are the first and
+last coordinates along each axis.
+The `origin` and `spacing` parameters of `structuredRegular` do not apply.
+Missing required arrays, unsupported array element types, invalid dimensions,
+or invalid coordinates make the field invalid.
+An invalid field must: contribute neither volume rendering nor isosurface
+geometry, and the implementation must: report an error through the device
+status callback, if one is installed.
+
+[[spatial_field_rectilinear_reconstruction]]
+For reconstruction, let [eq]#c~0~, ..., c~m~# be the coordinates along one
+axis.
+An object-space position [eq]#x# in interval [eq]#[c~i~, c~i+1~]# has logical
+grid coordinate [eq]#u = i {plus} (x - c~i~) / (c~i+1~ - c~i~)#;
+at the last coordinate, [eq]#u = m#.
+For node-centered data the sample coordinate is [eq]#q = u#; for cell-centered
+data it is [eq]#q = u - 0.5#.
+Apply this mapping independently on each axis and clamp each sample coordinate
+to [eq]#[0, n - 1]#, where [eq]#n# is the corresponding dimension of `data`.
+With `nearest`, select index [eq]#{lfloor}q {plus} 0.5{rfloor}# on each axis;
+an exact tie selects the higher index.
+With `linear`, use trilinear interpolation between the surrounding samples
+at these sample coordinates.
+An axis with one sample uses that value throughout its extent.
+These rules define the field only inside its domain and apply to both volume
+rendering and isosurface geometry.
+
+[NOTE]
+.Note
+====
+For cell-centered rectilinear data, linear reconstruction in the logical grid
+is not generally linear interpolation between physical cell centers.
+With boundaries [eq]#[0, 1, 4]# and cell values [eq]#[0, 1]# constant along the
+other axes, the field value at [eq]#x = 1# is [eq]#0.5#.
+Interpolation between the physical centers [eq]#0.5# and [eq]#2.5# would
+instead give [eq]#0.25#.
+====
+
+Unknown values of `filter` select `linear`.
+`KHR_SPATIAL_FIELD_STRUCTURED_REGULAR_FILTER_CUBIC` does not add cubic
+filtering to this subtype.

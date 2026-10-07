@@ -23,6 +23,22 @@ Backend validation cases:
 - One cell sample per axis produces a nonempty constant field; the same dimensions are invalid in node mode.
 - Check unknown-value fallback, unset/recommit, boundary filtering, volume and isosurface use, and introspection consistency.
 
+## Structured rectilinear fields
+
+[Specification source](../../chapters/extensions/spatial_field_structured_rectilinear.txt)
+
+The base subtype is node-centered, with nearest/linear reconstruction and the scalar types already used by regular fields. It adopts the centering extension with default `node`: `n` node samples need `n` axis coordinates, while `n` cell samples need `n + 1` boundary coordinates. Coordinates must be finite and strictly increasing.
+
+Placement and interpolation are subtype-specific. Positions first map through the nonuniform axis intervals to logical coordinates `u`, then to sample coordinates `q = u` for nodes or `q = u - 0.5` for cells. The regular-field `(x-origin)/spacing` formula and cubic kernel do not apply here.
+
+For cell boundaries `[0,1,4]` and values `[0,1]`, the specified reconstruction gives 0.5 at X=1; interpolation between physical centers gives 0.25. The extension uses the logical-grid interpretation without prescribing VisRTX's lookup-table resolution. Agree numerical tolerances before treating a backend as conformant.
+
+Additional validation cases:
+
+- Node coordinates and values `[0,1,4]`: linear reconstruction at X=2 gives 2.
+- Cell boundaries `[0,1,4]`, values `[0,1]`: linear gives 0.5 at X=1; nearest selects the higher sample there.
+- Validate coordinate types/counts, finite strict ordering, one-cell dimensions, defaults, updates, and both volume/isosurface use.
+
 ## Build and validation
 
 From this workspace:

@@ -104,6 +104,8 @@ their addresses in memory can be easily computed from a 3D position. A
 common type of structured spatial fields are regular grids.
 ====
 
+include::../extensions/spatial_field_structured_rectilinear.txt[]
+
 [[object_types_spatial_field_nanovdb]]
 ==== NanoVDB
 
