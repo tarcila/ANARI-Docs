@@ -1,4 +1,4 @@
-// Copyright 2023-2025 The Khronos Group Inc.
+// Copyright 2023-2026 The Khronos Group Inc.
 // SPDX-License-Identifier: CC-BY-4.0
 
 [[object_types_spatial_field]]
@@ -28,21 +28,70 @@ the table below.
 [cols="<,<2,>,<5",options="header,unbreakable"]
 |===================================================================================================
 | Name    | Type           |    Default | Description
-| data    |`ARRAY3D` of `UFIXED8` / `FIXED16` / `UFIXED16` / `FLOAT32` / `FLOAT64` | | the actual
-					  field values for the 3D grid, i.e., the scalars are
-					  vertex-centered; the size of the spatial field is inferred
-                                          from `data`
+| data    |`ARRAY3D` of `UFIXED8` / `FIXED16` / `UFIXED16` / `FLOAT32` / `FLOAT64` | | scalar samples for the grid, vertex-centered by default; the array dimensions specify the sample counts
 | origin  |`FLOAT32_VEC3`  |  (0, 0, 0) | origin of the grid in object-space
 | spacing |`FLOAT32_VEC3`  |  (1, 1, 1) | size of the grid cells in object-space
 | filter  |`STRING`        |    `linear`| filter used for reconstructing the field,
                                           possible values: `nearest`, `linear`, `cubic` (extension `KHR_SPATIAL_FIELD_STRUCTURED_REGULAR_FILTER_CUBIC`)
+| dataCentering |`STRING` | `node` | extension
+    <<extension_spatial_field_data_centering, `KHR_SPATIAL_FIELD_DATA_CENTERING`>>;
+    sample location: grid vertices (`node`) or cell centers (`cell`)
 |===================================================================================================
 
 The spatial field grid can be moved with `origin` and scaled with `spacing`, in
-local object coordinates. The spatial field data is interpreted to be
-vertex-centered, which means at least two data values need to be
-specified in each dimension to avoid a degenerated spatial field. Its local
-bounds are [`origin`, `origin` + (`data`.size - 1) {times} `spacing`].
+local object coordinates.
+By default, samples lie at grid vertices: each dimension must: contain at least
+two samples, and the domain is
+[`origin`, `origin` + (`data`.size - 1) {times} `spacing`].
+
+[[extension_spatial_field_data_centering]]
+The extension `KHR_SPATIAL_FIELD_DATA_CENTERING` adds `dataCentering`
+to `structuredRegular`.
+Other subtypes can: specify support for this parameter in their defining
+extensions, with their own sample-placement rules and default.
+An implementation advertising this extension must: support the parameter on
+every applicable subtype that it implements, and must: implement at least
+one such subtype.
+The parameter and its default must: be exposed through
+<<api_concepts_introspection, introspection>>; runtime availability is queried
+through the device and renderer extension properties.
+An absent parameter or an unknown string selects the subtype's documented
+default; for `structuredRegular`, that default is `node`.
+Changing centering reinterprets the samples without resampling or resizing
+the data.
+Unsetting the parameter restores the subtype's default, following the ordinary
+<<api_concepts_parameters, commit rules>>.
+Sample association for subtypes that do not define support is unchanged.
+
+For regular fields with `dataCentering` set to `cell`, let [eq]#o#, [eq]#s#,
+and [eq]#n# denote the origin, spacing, and sample count along an axis.
+Sample [eq]#i# is at [eq]#o {plus} (i {plus} 0.5) {times} s#, and the axis
+extent is [eq]#[o, o {plus} n {times} s]#.
+There must: be at least one sample on each axis.
+All origin components must: be finite, all spacing components must: be finite
+and positive, and the resulting domain endpoints must: be finite.
+Missing data, invalid dimensions, or invalid cell-centered placement make the
+field invalid: it must: contribute neither volume rendering nor isosurface
+geometry, and the device must: report an error through its status callback,
+if one is installed.
+
+Cell centering specifies sample positions, not a piecewise-constant filter.
+For regular fields, the sample coordinate of position [eq]#x# is
+[eq]#q = (x - o) / s - 0.5#.
+Reconstruct inside the field domain using these coordinates independently
+on each axis.
+For all filters, an integer sample index outside [eq]#[0, n - 1]# uses the
+nearest boundary sample.
+`nearest` selects index [eq]#{lfloor}q {plus} 0.5{rfloor}#; a tie selects the
+higher index before applying this boundary rule.
+`linear` uses trilinear interpolation between the surrounding samples, which
+is equivalent to clamping each sample coordinate before interpolation.
+`cubic`, when supported, uses the subtype's cubic kernel at [eq]#q# with the
+extended boundary samples, not a clamped continuous coordinate.
+This extension does not require cubic support or define a new cubic kernel.
+An axis with one sample uses that value throughout its extent.
+Volume rendering and isosurfaces use this same domain and reconstruction;
+node-centered reconstruction is unchanged.
 
 Applications which set unknown values for `filter` will result in the default
 being used.

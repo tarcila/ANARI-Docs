@@ -58,6 +58,7 @@
   - <<extension_sampler_image3d_clamp_to_border, `image3D`>> sampler `wrapMode1`, `wrapMode2` and `wrapMode3` support `clampToBorder`
 * <<object_types_sampler_primitive, `KHR_SAMPLER_PRIMITIVE`>>: `primitive` sampler subtype is supported
 * <<object_types_sampler_transform, `KHR_SAMPLER_TRANSFORM`>>: `transform` sampler subtype is supported
+* <<extension_spatial_field_data_centering, `KHR_SPATIAL_FIELD_DATA_CENTERING`>>: explicit node- or cell-centered sample association is supported on applicable field subtypes
 * <<object_types_spatial_field_nanovdb, `KHR_SPATIAL_FIELD_NANOVDB`>>: `nanovdb` spatial field subtype is supported
 * <<object_types_spatial_field_structured_regular, `KHR_SPATIAL_FIELD_STRUCTURED_REGULAR`>>: `structuredRegular` spatial field subtype is supported
 * <<object_types_spatial_field_structured_regular, `KHR_SPATIAL_FIELD_STRUCTURED_REGULAR_FILTER_CUBIC`>>: `structuredRegular` spatial field supports `cubic` filtering for parameter `filter`
