@@ -133,6 +133,8 @@ The device must support NanoVDB grids with major version 32.
 Applications which set unknown values for `filter` will result in the default being used.
 
 
+include::../extensions/spatial_field_nanovdb_rectilinear.txt[]
+
 [[object_types_spatial_field_unstructured]]
 ==== Unstructured
 

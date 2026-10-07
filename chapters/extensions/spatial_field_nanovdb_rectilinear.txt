@@ -1,0 +1,96 @@
+// Copyright 2026 The Khronos Group Inc.
+// SPDX-License-Identifier: CC-BY-4.0
+
+[[object_types_spatial_field_nanovdb_rectilinear]]
+==== NanoVDB Rectilinear
+
+Extension `KHR_SPATIAL_FIELD_NANOVDB_RECTILINEAR`
+
+NanoVDB rectilinear spatial fields are created by passing `nanovdbRectilinear`
+to <<object_types_spatial_field, `anariNewSpatialField`>>.
+They combine NanoVDB scalar storage with explicit, nonuniform object-space
+coordinates along three Cartesian axes.
+
+.Configuration parameters for NanoVDB rectilinear spatial fields.
+[cols="<,<2,>,<5",options="header,unbreakable"]
+|===================================================================================================
+| Name    | Type                  | Default | Description
+| data    |`ARRAY1D` of `UINT8`    |         | required serialized scalar NanoVDB grid
+| coordsX |`ARRAY1D` of `FLOAT32`  |         | required grid coordinates along the object-space X axis
+| coordsY |`ARRAY1D` of `FLOAT32`  |         | required grid coordinates along the object-space Y axis
+| coordsZ |`ARRAY1D` of `FLOAT32`  |         | required grid coordinates along the object-space Z axis
+| filter  |`STRING`               | `linear`| reconstruction filter; possible values: `nearest`, `linear`
+| dataCentering |`STRING` | `cell` | extension
+    <<extension_spatial_field_data_centering, `KHR_SPATIAL_FIELD_DATA_CENTERING`>>;
+    sample location: cell centers (`cell`) or grid vertices (`node`)
+|===================================================================================================
+
+The serialized-grid requirements are the same as for
+<<object_types_spatial_field_nanovdb, `nanovdb`>>: `data` contains a single
+grid, and NanoVDB major version 32 must: be supported.
+The explicit coordinate arrays determine placement and field extent for this
+subtype; the grid's embedded index-to-world transform and world-space
+bounding box are not used for either purpose.
+The coordinate arrays replace that mapping rather than composing with it.
+This does not change the behavior of the ordinary `nanovdb` subtype.
+
+For a nonempty grid, let [eq]#b# and [eq]#e# be the inclusive lower and upper
+indices along an axis of the grid's active-voxel index bounding box
+(`indexBBox`).
+There are [eq]#n = e - b {plus} 1# logical samples along that axis, including
+indices between the bounds whose values are inactive or represented by tiles
+or background values.
+This index bounding box supplies the lattice offset and sample counts, not
+object-space positions.
+
+The default association is cell-centered, including when the data-centering
+extension is not supported.
+For cell-centered data, the axis must: have at least one logical sample and
+its coordinate array must: contain [eq]#n {plus} 1# cell boundaries.
+The sample at NanoVDB index [eq]#b {plus} i# lies at the midpoint of boundaries
+[eq]#c~i~# and [eq]#c~i+1~#.
+When `KHR_SPATIAL_FIELD_DATA_CENTERING` is supported, the
+<<extension_spatial_field_data_centering, common default and update rules>>
+apply, with default `cell` rather than `node`.
+Selecting `node` instead requires at least two logical samples per axis and
+exactly [eq]#n# coordinates, with sample [eq]#b {plus} i# located at
+[eq]#c~i~#.
+An absent, unknown, or unset `dataCentering` selects `cell` for this subtype.
+
+For nonempty grids, coordinates must: be finite and strictly increasing.
+The field domain is the box between the first and last coordinates on each
+axis, independently of the embedded world-space bounding box.
+A well-formed grid with an empty `indexBBox` ([eq]#e < b# on at least one
+axis) has an empty field domain and contributes nothing; this case is valid
+and needs no diagnostic.
+The required coordinate arrays must: still be present with the declared
+element type, but may: be empty and their values and lengths are otherwise
+ignored for an empty grid.
+An invalid serialized grid, missing required arrays, unsupported array
+element types, or a violation of the nonempty-grid coordinate rules makes the
+field invalid: it must: contribute neither volume rendering nor isosurface
+geometry, and the device must: report an error through its status callback,
+if one is installed.
+
+Use the <<spatial_field_rectilinear_reconstruction,
+rectilinear coordinate mapping and reconstruction rules>>, substituting the
+logical sample counts above for the dense array dimensions.
+For each axis, map position [eq]#x# to logical coordinate [eq]#u#, then set
+[eq]#r = clamp(u - 0.5, 0, n - 1)# for cells or
+[eq]#r = clamp(u, 0, n - 1)# for nodes.
+The continuous NanoVDB lookup coordinate is [eq]#b {plus} r#.
+For `nearest`, the integer index is [eq]#b {plus} {lfloor}r {plus} 0.5{rfloor}#;
+ties select the higher index, including when [eq]#b# is negative.
+For `linear`, interpolate the surrounding logical values trilinearly, with
+integer stencil indices clamped to the index bounding box.
+
+A logical value is the value returned by the NanoVDB tree at that integer
+index, including inactive stored values, constant tiles, and the grid's
+background value where applicable.
+Inactive state is not a visibility mask and does not replace a value with
+zero.
+The same reconstructed field is used for volume rendering and isosurfaces.
+These shared reconstruction rules do not require the device to expose the
+`structuredRectilinear` subtype.
+Unknown `filter` values select `linear`; cubic filtering support on
+`nanovdb` does not extend to this subtype.

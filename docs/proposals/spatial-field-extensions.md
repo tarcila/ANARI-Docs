@@ -39,6 +39,39 @@ Additional validation cases:
 - Cell boundaries `[0,1,4]`, values `[0,1]`: linear gives 0.5 at X=1; nearest selects the higher sample there.
 - Validate coordinate types/counts, finite strict ordering, one-cell dimensions, defaults, updates, and both volume/isosurface use.
 
+## NanoVDB rectilinear fields
+
+[Specification source](../../chapters/extensions/spatial_field_nanovdb_rectilinear.txt)
+
+This adds a separate `nanovdbRectilinear` subtype and `KHR_SPATIAL_FIELD_NANOVDB_RECTILINEAR` extension. It extends the scope beyond the initially deferred item in the historical VisRTX review. Ordinary `nanovdb` behavior is unchanged, and supporting the new subtype does not require exposing the dense rectilinear subtype.
+
+The parameter names remain `coordsX`, `coordsY`, and `coordsZ`. Defaults differ deliberately: dense rectilinear fields are node-centered, while NanoVDB rectilinear fields are cell-centered. The latter adopts the common centering extension to additionally allow `node`; absent/unknown/unset values select its own `cell` default.
+
+The extension defines the mapping as follows:
+
+- Explicit coordinates are the sole object-space placement/domain authority. They replace, rather than compose with, the embedded index-to-world map and `worldBBox` for this subtype.
+- The inclusive active index bbox `[b,e]` defines sample counts `n=e-b+1` and index origins. Nonempty cell-centered axes require `n+1` boundaries; node-centered axes require `n` sample coordinates.
+- Reuse the dense rectilinear logical mapping, clamp the local sample coordinate to `[0,n-1]`, then add `b` for tree lookup. A nonzero or negative index origin is not discarded.
+- Logical lookups retain inactive stored values, constant tiles, and background values. Inactivity is not a zero/transparent mask inside the domain.
+- A well-formed empty index bbox gives an empty domain. Required coordinate arrays remain typed and present, but their values/lengths are ignored. Malformed grids and invalid nonempty-grid coordinate inputs instead follow invalid-field diagnostics.
+
+**The specified contract is not a claim of VisRTX conformance.** Its [schema](../../../VisRTX/devices/rtx/device/visrtx_spatial_field_nanovdb_rectilinear.json) describes object-space axes and a cell default, but its [field implementation](../../../VisRTX/devices/rtx/device/spatial_field/NvdbRectilinearField.cpp#L131) derives bounds from `worldBBox`, and its [sampler](../../../VisRTX/devices/rtx/device/spatial_field/NvdbRectilinearSamplerInline.h#L127) composes the embedded map with axis lookup tables. The new authority rule and coordinate-count validation need implementation work and independent review. NanoVDB serialized-format/grid-type support must also be reconciled with the existing NanoVDB contract rather than inferred from vendor shader paths.
+
+Numeric and edge-case validation cases for this subtype:
+
+| Input | Expected behavior |
+|---|---|
+| X index range `[-3,-2]`, cell boundaries `[0,1,4]`, values `[0,1]` | At X=1, local coordinate is 0.5 and continuous tree coordinate is -2.5: linear gives 0.5; nearest chooses index -2 and gives 1. |
+| X index range `[7,9]`, node coordinates `[0,1,4]`, values `[0,1,4]` | At X=2, interpolate indices 8 and 9 to obtain 2; do not look up indices relative to zero. |
+| Embedded map/world bbox far from axis endpoints | Rendering, isosurfaces, and reported containing-object bounds use the axis-defined domain; the header world bbox cannot cull it away. |
+| Inactive voxel with nonzero stored value, a constant tile, and absent topology with nonzero background inside the index bbox | Use each tree lookup value, not zero; transfer functions may make it visible. |
+| One logical sample per axis | Valid constant cell-centered field with two boundaries per axis; invalid node-centered dimensions. |
+| Empty index bbox | Empty domain, no contribution; typed coordinate arrays may be empty. |
+| Node/unknown/unset centering changes | Node uses `n` coordinates; unknown/unset restores cell behavior and requires `n+1`, with no automatic array resizing. |
+| Activity changes that alter `indexBBox` | Revalidate coordinate lengths against the new counts and use the new lower index; do not silently retain the old offset. |
+
+Samples in these examples are constant along the other two axes, with valid coordinate counts there. The extension defines the transform override and empty-grid behavior; these are not inherited implementation guarantees. Numerical tolerances remain an interoperability review topic.
+
 ## Build and validation
 
 From this workspace:
